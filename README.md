@@ -10,16 +10,7 @@ Before starting the project, you need to do the following:
 ### Installation
 1. Libraries for the correct operation of the project:
    - ```shell
-      pip install requests
-       ```
-   - ```shell
-       pip install bs4
-       ```
-   - ```shell
-       pip install yt_dlp
-      ```
-   - ```shell
-       pip install ffmpeg-python
+      pip install requests bs4 yt_dlp ffmpeg-python
        ```
 2. Programs for downloading videos correctly:
     - `https://github.com/GyanD/codexffmpeg/releases/tag/2026-01-05-git-2892815c45`
