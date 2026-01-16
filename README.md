@@ -34,6 +34,5 @@ Create a `data.json` file and write the following code. Then add your links to t
 
 ## Roadmap
 - [x] Add change log
-- [ ] Add support site `NoodleMagazine`
-- [ ] Add support site `UKDevilz`
+- [ ] Add support other sites
 - [ ] Add GUI
