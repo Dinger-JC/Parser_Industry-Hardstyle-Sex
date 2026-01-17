@@ -70,9 +70,6 @@ class App:
             'sec-fetch-site': 'cross-site' # Запрос идет на другой домен
         }
 
-        # Заголовки HTTP-запросов для ffprobe
-        ffprobe_headers: str = "".join([f"{k}: {v}\r\n" for k, v in self.headers.items()])
-
         # Настройки для yt_dlp
         self.yt_dlp_options: dict[str, Any] = {
             'http_headers': self.headers,
@@ -94,7 +91,7 @@ class App:
 
         # Настройки для ffprobe
         self.ffprobe_options: dict[str, Any] = {
-            'headers': ffprobe_headers,
+            'headers': "".join([f"{k}: {v}\r\n" for k, v in self.headers.items()]), # Заголовки HTTP-запросов
             'analyzeduration': '5000000', # Время на чтение данных (в микросекундах)
             'probesize': '5000000', # Максимальный объем данных для анализа (в микросекундах)
             'rw_timeout': '10000000', # Общее время на операцию (в микросекундах)
