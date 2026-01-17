@@ -6,7 +6,7 @@
 
 # Основное
 from logger import Log
-import requests
+from curl_cffi import requests
 from bs4 import BeautifulSoup
 import yt_dlp
 import ffmpeg
@@ -219,7 +219,7 @@ class App:
         '''Получение данных с сайта'''
         # Получение ссылки с сайта
         try:
-            response = requests.get(url, timeout = 10)
+            response = requests.get(url, timeout = 15)
             self.CheckLink(response)
 
         except requests.exceptions.ConnectionError:
@@ -230,8 +230,7 @@ class App:
             log.error(f'Сайт {domain} отвечал слишком долго')
             sys.exit(0)
 
-        html_content = response.text
-        page = BeautifulSoup(html_content, 'html.parser')
+        page = BeautifulSoup(response.text, 'html.parser')
 
         # Проверка домена
         self.video_url: str = None
@@ -240,7 +239,7 @@ class App:
             title: str = re.sub(r'\s*[-–—]\s*AnalMedia\s*$', '', raw_title, flags = re.IGNORECASE).strip()
             self.site: str = 'AnalMedia'
 
-            video = page.find('video')
+            video: str = page.find('video')
             self.video_url: str = video.find('source')['src']
 
         elif domain == list(sites.values())[1]:
@@ -255,7 +254,7 @@ class App:
                     links.append(link['href'])
 
             for i, href in enumerate(links):
-                find_link = str(href)
+                find_link: str = str(href)
                 if find_link and f'/x{len(links) - 1}/' in find_link:
                     self.video_url: str = find_link
 
