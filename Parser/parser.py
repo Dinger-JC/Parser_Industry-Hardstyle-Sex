@@ -34,16 +34,16 @@ class App:
     def __init__(self):
         '''Основное'''
         # Проверка необходимых файлов
+        self.data = 'data.json'
         self.ffmpeg = 'ffmpeg.exe'
         self.ffprobe = 'ffprobe.exe'
-        self.data = 'data.json'
         self.CheckRequiredFiles(self.data, self.ffmpeg, self.ffprobe)
 
         # Обработка данных из файла
         with open(self.data, encoding ='utf-8') as file:
             links = json.load(file)
         self.sites = links['sites']
-        self.url = links['videos']['1']
+        self.url = links['videos']['4']
         self.domain: str = urlparse(self.url).netloc
         log.info(f'Ссылка: {self.url}')
         log.info(f'Сайт: {self.domain}')
@@ -58,26 +58,29 @@ class App:
         self.filename: str = ''.join(random.choice(self.symbols) for _ in range(32))
         self.file: str = f'{self.folder / self.filename}.mp4'
 
-        # Настройки для скачивания с yt_dlp
-        self.ffmpeg_options: dict[str, Any] = {
-            'http_headers': { # Заголовки HTTP-запросов для имитации поведения реального браузера
-                'impersonate': 'chrome', # Имитация браузера Chrome (TLS/HTTP2) для обхода защиты
-                'Referer': f'https://{self.domain}/', # Указывает серверу, с какой страницы пришел запрос
-                'Accept-Language': 'ru,en-US;q=0.9,en;q=0.8', # Языки: русский, английский
-                'sec-ch-ua-platform': '"Windows"', # Сообщает серверу, что клиент работает на ОС Windows
-                'sec-fetch-storage-access': 'active', # Разрешение на доступ к персонализированному хранилищу
-                'sec-fetch-dest': 'video', # Цель запроса является видеофайл
-                'sec-fetch-mode': 'no-cors', # Режим запроса без CORS
-                'sec-fetch-site': 'cross-site' # Запрос идет на другой домен
-            },
+        # Заголовки HTTP-запросов
+        self.headers: dict[str, str] = {
+            'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36', # Имитация браузера Chrome (TLS/HTTP2) для обхода защиты
+            'referer': f'https://{self.domain}/', # Указывает серверу, с какой страницы пришел запрос
+            'accept-language': 'ru,en-US;q=0.9,en;q=0.8', # Языки
+            'sec-ch-ua': '"Not(A:Brand";v="99", "Google Chrome";v="143", "Chromium";v="143"', # Движок
+            'sec-ch-ua-mobile': '?0', # Платформа
+            'sec-ch-ua-platform': '"Windows"', # ОС
+            'sec-fetch-mode': 'no-cors', # Режим запроса без CORS
+            'sec-fetch-site': 'cross-site' # Запрос идет на другой домен
+        }
+
+        # Заголовки HTTP-запросов для ffprobe
+        ffprobe_headers: str = "".join([f"{k}: {v}\r\n" for k, v in self.headers.items()])
+
+        # Настройки для yt_dlp
+        self.yt_dlp_options: dict[str, Any] = {
+            'http_headers': self.headers,
             'progress_hooks': [self.ProgressBar], # Отслеживание прогресса загрузки
-            'ffmpeg_location': f'{Path(__file__).parent.absolute() / self.ffmpeg}', # Путь к исполняемому файлу ffmpeg
             'outtmpl': self.file, # Путь сохраняемого файла
             'format': 'bestvideo+bestaudio/best', # Качество видео
+            'ffmpeg_location': str(Path(__file__).parent.absolute() / self.ffmpeg), # Путь ffmpeg
             'merge_output_format': 'mp4', # Формат после загрузки
-            'Connection': 'keep-alive', # Удержание HTTP соединения открытым
-            'Upgrade-Insecure-Requests': '1', # Перенаправление на безопасное HTTPS соединение
-            'DNT': '1', # Не отслеживать действия
             'socket_timeout': 15, # Время ожидания ответа от сервера (в секундах)
             'sleep_interval': 0, # Минимальная пауза между загрузками (в секундах)
             'max_sleep_interval': 2, # Максимальная случайная пауза между запросами (в секундах)
@@ -89,15 +92,12 @@ class App:
             'verbose': False # Подробный лог
         }
 
+        # Настройки для ffprobe
         self.ffprobe_options: dict[str, Any] = {
-            'headers': ( # Заголовки HTTP-запросов для имитации поведения реального браузера
-                'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36\r\n' # Имитация браузера Chrome для обхода защиты
-                'Connection: keep-alive\r\n' # Удержание HTTP соединения открытым
-                'Accept: */*\r\n' # Принятие любого типа контента
-            ),
+            'headers': ffprobe_headers,
             'analyzeduration': '5000000', # Время на чтение данных (в микросекундах)
             'probesize': '5000000', # Максимальный объем данных для анализа (в микросекундах)
-            'timeout': '10000000', # Общее время на операцию (в микросекундах)
+            'rw_timeout': '10000000', # Общее время на операцию (в микросекундах)
             'reconnect_delay_max': '5', # Максимальное время ожидания (в секундах)
             'tls_verify': '0', # Отключает проверку SSL-сертификатов
             'reconnect': '1', # Автоматическое переподключение
@@ -179,7 +179,7 @@ class App:
             408: 'сервер не дождался ответа',
             429: 'слишком много запросы',
             500: 'внутрненняя ошибка сервера',
-            502: 'проблема с соединением между',
+            502: 'проблема с соединением между серверами',
             503: 'сервер временно перегружен'
         }
 
@@ -230,18 +230,10 @@ class App:
             sys.exit(0)
 
         page = BeautifulSoup(response.text, 'html.parser')
+        self.video_url: str = None
 
         # Проверка домена
-        self.video_url: str = None
         if domain == list(sites.values())[0]:
-            raw_title: str = page.find('title').text
-            title: str = re.sub(r'\s*[-–—]\s*AnalMedia\s*$', '', raw_title, flags = re.IGNORECASE).strip()
-            self.site: str = 'AnalMedia'
-
-            video: str = page.find('video')
-            self.video_url: str = video.find('source')['src']
-
-        elif domain == list(sites.values())[1]:
             raw_title: str = page.find('title').text
             title: str = re.sub(r'\s*[-–—]\s*Strip2.co\s*$', '', raw_title, flags = re.IGNORECASE).strip()
             self.site: str = 'Strip2'
@@ -257,8 +249,16 @@ class App:
                 if find_link and f'/x{len(links) - 1}/' in find_link:
                     self.video_url: str = find_link
 
+        elif domain == list(sites.values())[1]:
+            raw_title: str = page.find('title').text
+            title: str = re.sub(r'\s*[-–—]\s*AnalMedia\s*$', '', raw_title, flags = re.IGNORECASE).strip()
+            self.site: str = 'AnalMedia'
+
+            video: str = page.find('video')
+            self.video_url: str = video.find('source')['src']
+
         else:
-            log.error('Загрузка со сторонних сайтов невозможна. Cкачивание возможно только с сайтов AnalMedia и Strip2')
+            log.error('Загрузка со сторонних сайтов невозможна. Cкачивание возможно только с сайтов Strip2 и AnalMedia')
             sys.exit(0)
 
         log.info(f'Название: {title}')
@@ -285,7 +285,7 @@ class App:
     def GetVideo(self, video_url: str):
         '''Скачивание видео'''
         log.info('Видео начало скачиваться')
-        with yt_dlp.YoutubeDL(self.ffmpeg_options) as video:
+        with yt_dlp.YoutubeDL(self.yt_dlp_options) as video:
             video.download([video_url])
 
 
