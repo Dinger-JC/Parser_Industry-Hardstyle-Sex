@@ -1,6 +1,5 @@
 # Parser Industry-Hardstyle-Sex
 # Copyright 2026 t.me/Dinger_JC
-# Version: 1.0.0
 
 
 
