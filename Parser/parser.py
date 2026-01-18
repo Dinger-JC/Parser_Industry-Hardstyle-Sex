@@ -3,29 +3,29 @@
 
 
 
-# Основное
-from logger import Log
-from curl_cffi import requests
-from bs4 import BeautifulSoup
-import yt_dlp
-import ffmpeg
+# Стандартные библиотеки
+import json
+import math
+import os
+import random
+import re
+import string
+import sys
+from datetime import timedelta
+from fractions import Fraction
+from pathlib import Path
+from pprint import pp
+from typing import Any
 from urllib.parse import urlparse
 
-# Работа с файлами
-import re
-import os
-from pathlib import Path
-import json
+# Сторонние библиотеки
+import ffmpeg
+import yt_dlp
+from bs4 import BeautifulSoup
+from curl_cffi import requests
 
-# Другое
-from typing import Any
-from datetime import timedelta
-import math
-import sys
-import random
-import string
-from fractions import Fraction
-from pprint import pprint
+# Локальные модули
+from logger import Log
 
 
 
@@ -72,11 +72,11 @@ class App:
 
         # Настройки для yt_dlp
         self.yt_dlp_options: dict[str, Any] = {
-            'http_headers': self.headers,
+            'http_headers': self.headers, # Заголовки HTTP-запросов
             'progress_hooks': [self.ProgressBar], # Отслеживание прогресса загрузки
+            'ffmpeg_location': str(Path(__file__).parent.absolute() / self.ffmpeg), # Путь ffmpeg
             'outtmpl': self.file, # Путь сохраняемого файла
             'format': 'bestvideo+bestaudio/best', # Качество видео
-            'ffmpeg_location': str(Path(__file__).parent.absolute() / self.ffmpeg), # Путь ffmpeg
             'merge_output_format': 'mp4', # Формат после загрузки
             'socket_timeout': 15, # Время ожидания ответа от сервера (в секундах)
             'sleep_interval': 0, # Минимальная пауза между загрузками (в секундах)
@@ -91,7 +91,7 @@ class App:
 
         # Настройки для ffprobe
         self.ffprobe_options: dict[str, Any] = {
-            'headers': "".join([f"{k}: {v}\r\n" for k, v in self.headers.items()]), # Заголовки HTTP-запросов
+            'headers': ''.join([f'{k}: {v}\r\n' for k, v in self.headers.items()]), # Заголовки HTTP-запросов
             'analyzeduration': '5000000', # Время на чтение данных (в микросекундах)
             'probesize': '5000000', # Максимальный объем данных для анализа (в микросекундах)
             'rw_timeout': '10000000', # Общее время на операцию (в микросекундах)
