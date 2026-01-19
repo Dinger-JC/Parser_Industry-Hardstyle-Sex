@@ -43,7 +43,7 @@ class App:
         with open(self.data, encoding ='utf-8') as file:
             links = json.load(file)
         self.sites = links['sites']
-        self.url = links['videos']['4']
+        self.url = links['videos']['1']
         self.domain: str = urlparse(self.url).netloc
         log.info(f'Ссылка: {self.url}')
         log.info(f'Сайт: {self.domain}')
@@ -230,7 +230,7 @@ class App:
         self.video_url: str = None
 
         # Проверка домена
-        if domain == list(sites.values())[0]:
+        if domain == sites['Strip2']:
             raw_title: str = page.find('title').text
             title: str = re.sub(r'\s*[-–—]\s*Strip2.co\s*$', '', raw_title, flags = re.IGNORECASE).strip()
             self.site: str = 'Strip2'
@@ -246,7 +246,7 @@ class App:
                 if find_link and f'/x{len(links) - 1}/' in find_link:
                     self.video_url: str = find_link
 
-        elif domain == list(sites.values())[1]:
+        elif domain == sites['AnalMedia']:
             raw_title: str = page.find('title').text
             title: str = re.sub(r'\s*[-–—]\s*AnalMedia\s*$', '', raw_title, flags = re.IGNORECASE).strip()
             self.site: str = 'AnalMedia'
